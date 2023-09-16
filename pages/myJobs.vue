@@ -4,6 +4,12 @@ import { useUserStore } from "~/stores/user";
 const userStore = useUserStore();
 const router = useRouter();
 
+useSeoMeta({
+  title: "My jobs",
+  ogTitle: "My jobs",
+  description: "The description",
+});
+
 const myJobs = ref([]);
 const getJobs = async () => {
   await $fetch(`http://127.0.0.1:8000/api/v1/jobs/my-jobs`, {
@@ -14,11 +20,32 @@ const getJobs = async () => {
   })
     .then((response) => {
       myJobs.value = response;
-      console.log(myJobs.value, "here ");
     })
     .catch((error) => {
       console.log(error);
     });
+};
+
+const deleteJob = async (itemId) => {
+  await $fetch(`http://127.0.0.1:8000/api/v1/jobs/delete-job/${itemId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: "token " + userStore.user.token,
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => {
+      if (response.status === "deleted successfully") {
+        getJobs();
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
+const editJob = () => {
+  console.log("from editJob");
 };
 
 onMounted(() => {
@@ -54,6 +81,25 @@ onMounted(() => {
             class="p-3 bg-slate-800 rounded-lg"
             >Details</NuxtLink
           >
+        </div>
+
+        <div class="text-white">
+          <NuxtLink
+            :to="`/update/${item.id}`"
+            class="p-3 bg-slate-800 rounded-lg"
+            @click="editJob(item.id)"
+          >
+            Edit
+          </NuxtLink>
+        </div>
+
+        <div class="text-white">
+          <button
+            class="p-3 bg-slate-800 rounded-lg"
+            @click="deleteJob(item.id)"
+          >
+            Delete
+          </button>
         </div>
       </div>
     </div>

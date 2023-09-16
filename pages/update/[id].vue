@@ -2,7 +2,24 @@
 import { useUserStore } from "~/stores/user";
 
 const userStore = useUserStore();
+const route = useRoute();
 const router = useRouter();
+
+const { data: job } = await useFetch(
+  `http://127.0.0.1:8000/api/v1/jobs/${route.params.id}/`
+);
+
+console.log(job, "here edit job");
+
+// const selectedCategory = ref("");
+const title = ref(job.value.title);
+const description = ref(job.value.description);
+const position_salary = ref(job.value.position_salary);
+const position_location = ref(job.value.position_location);
+const company_name = ref(job.value.company_name);
+const company_location = ref(job.value.company_location);
+const company_email = ref(job.value.company_email);
+const errors = ref([]);
 
 onMounted(() => {
   if (!userStore.user.isAuthenticated) {
@@ -10,40 +27,28 @@ onMounted(() => {
   }
 });
 
-let { data: jobCategories } = await useFetch(
-  `http://127.0.0.1:8000/api/v1/jobs/categories/`
-);
-
-const selectedCategory = ref("");
-const title = ref("");
-const description = ref("");
-const position_salary = ref("");
-const position_location = ref("");
-const company_name = ref("");
-const company_location = ref("");
-const company_email = ref("");
-const errors = ref([]);
-
-const submitForm = async () => {
-  await $fetch(`http://127.0.0.1:8000/api/v1/jobs/create-jobs/`, {
-    method: "POST",
-    headers: {
-      Authorization: "token " + userStore.user.token,
-      "Content-Type": "application/json",
-    },
-    body: {
-      category: selectedCategory.value,
-      title: title.value,
-      description: description.value,
-      position_salary: position_salary.value,
-      position_location: position_location.value,
-      company_name: company_name.value,
-      company_location: company_location.value,
-      company_email: company_email.value,
-    },
-  })
+const updateForm = async () => {
+  await $fetch(
+    `http://127.0.0.1:8000/api/v1/jobs/update-job/${route.params.id}/`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: "token " + userStore.user.token,
+        "Content-Type": "application/json",
+      },
+      body: {
+        category: job.value.category,
+        title: title.value,
+        description: description.value,
+        position_salary: position_salary.value,
+        position_location: position_location.value,
+        company_name: company_name.value,
+        company_location: company_location.value,
+        company_email: company_email.value,
+      },
+    }
+  )
     .then((response) => {
-      console.log(response, "here the response of registration");
       router.push("/myjobs");
     })
     .catch((error) => {
@@ -57,13 +62,12 @@ const submitForm = async () => {
     });
 };
 </script>
-
 <template>
   <div class="px-6 py-10">
-    <h1 class="text-3xl font-bold">Create job!</h1>
+    <h1 class="text-3xl font-bold">Update job!</h1>
 
-    <form @submit.prevent="submitForm" class="space-y-4">
-      <div>
+    <form @submit.prevent="updateForm" class="space-y-4">
+      <!-- <div>
         <label>Category</label>
 
         <select
@@ -80,7 +84,7 @@ const submitForm = async () => {
             {{ option.title }}
           </option>
         </select>
-      </div>
+      </div> -->
 
       <div>
         <label>Title</label>
@@ -156,10 +160,10 @@ const submitForm = async () => {
       </div>
 
       <div class="text-white">
-        <button class="p-3 bg-slate-800 rounded-lg">Submit</button>
+        <button class="p-3 bg-slate-800 rounded-lg">Save Changes</button>
       </div>
     </form>
   </div>
 </template>
 
-<style scoped></style>
+<style lang="scss" scoped></style>
