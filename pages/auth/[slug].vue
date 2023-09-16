@@ -2,6 +2,20 @@
 const route = useRoute();
 const router = useRouter();
 const nuxtApp = useNuxtApp();
+import { useUserStore } from "~/stores/user";
+
+const userStore = useUserStore();
+
+// For form data:
+const emailLogin = ref("");
+const passwordLogin = ref("");
+const isRememberMe = ref(false);
+
+const fullNameRegister = ref("");
+const emailRegister = ref("");
+const passwordRegister = ref("");
+const confirmPasswordRegister = ref("");
+const isAgree = ref(false);
 
 const btnActiveBack = ref(null);
 const loginForm = ref(null);
@@ -54,6 +68,76 @@ onMounted(() => {
   }
   setupEventListeners();
 });
+
+// methods
+const handleLogin = async () => {
+  await $fetch(`http://127.0.0.1:8000/api/v1/token/login`, {
+    method: "POST",
+    body: {
+      username: emailLogin.value,
+      password: passwordLogin.value,
+    },
+  })
+    .then((data) => {
+      console.log(data.auth_token, "here the response of login");
+      userStore.setToken(data.auth_token, emailLogin.value);
+      router.push({ path: "/" });
+    })
+    .catch((error) => {
+      if (error.response) {
+        for (const property in error.response._data) {
+          error.value.push(`${property}: ${error.response._data[property]}`);
+        }
+        console.log(JSON.stringify(error.response));
+      } else if (error.message) {
+        error.value.push("Something went wrong. Please try again.");
+        console.log(JSON.stringify(error));
+      }
+    });
+  console.log(
+    "from handleLogin",
+    emailLogin.value,
+    passwordLogin.value,
+    isRememberMe.value
+  );
+};
+const handleRegister = async () => {
+  await $fetch(`http://127.0.0.1:8000/api/v1/users/`, {
+    method: "POST",
+    body: {
+      // name: fullNameRegister.value,
+      // password: passwordRegister.value,
+      // isAgree: isAgree.value,
+      firstname: fullNameRegister.value,
+      username: fullNameRegister.value,
+      email: emailRegister.value,
+      password: passwordRegister.value,
+    },
+  })
+    .then((response) => {
+      console.log(response, "here the response of registration");
+      router.push("/auth/login");
+    })
+    .catch((error) => {
+      if (error.response) {
+        for (const property in error.response._data) {
+          error.value.push(`${property}: ${error.response._data[property]}`);
+        }
+        console.log(JSON.stringify(error.response));
+      } else if (error.message) {
+        error.value.push("Something went wrong. Please try again.");
+        console.log(JSON.stringify(error));
+      }
+    });
+  console.log(
+    "from handleRegister",
+    fullNameRegister.value,
+    emailRegister.value,
+    passwordRegister.value,
+    confirmPasswordRegister.value,
+    isAgree.value
+  );
+};
 </script>
 
 <template>
@@ -69,27 +153,26 @@ onMounted(() => {
         </button>
       </div>
       <div class="form-box">
-        <form class="login-form" ref="loginForm">
+        <div class="login-form formDiv" ref="loginForm">
           <div class="input-box">
-            <input type="text" id="username" required />
-            <label for="username">Username</label>
+            <input v-model="emailLogin" type="email" id="emailLogin" required />
+            <label for="emailLogin">Email Id</label>
           </div>
           <div class="input-box">
-            <input type="password" id="password" required />
-            <label for="password">Password</label>
+            <input
+              v-model="passwordLogin"
+              type="passwordLogin"
+              id="passwordLogin"
+              required
+            />
+            <label for="passwordLogin">Password</label>
           </div>
           <div class="check-box">
-            <input type="checkbox" id="login-checkbox" />
+            <input v-model="isRememberMe" type="checkbox" id="login-checkbox" />
             <label for="login-checkbox">Remember me</label>
             <span>Forgot password?</span>
           </div>
-          <button class="submit-button">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            Login
-          </button>
+          <button class="submit-button" @click="handleLogin">Login</button>
 
           <div class="text-center mt-4">
             Don't have account? Click here to
@@ -100,31 +183,51 @@ onMounted(() => {
               register!
             </span>
           </div>
-        </form>
-        <form class="register-form" ref="registerForm">
+        </div>
+        <div class="register-form formDiv" ref="registerForm">
           <div class="input-box">
-            <input type="text" id="username2" required />
-            <label for="username2">Username</label>
+            <input
+              v-model="fullNameRegister"
+              type="text"
+              id="fullNameRegister"
+              required
+            />
+            <label for="fullNameRegister">Full Name</label>
           </div>
           <div class="input-box">
-            <input type="email" id="email" required />
-            <label for="email">Email Id</label>
+            <input
+              v-model="emailRegister"
+              type="email"
+              id="emailRegister"
+              required
+            />
+            <label for="emailRegister">Email Id</label>
           </div>
           <div class="input-box">
-            <input type="password" id="password2" required />
-            <label for="password2">Password</label>
+            <input
+              v-model="passwordRegister"
+              type="password"
+              id="passwordRegister"
+              required
+            />
+            <label for="passwordRegister">Password</label>
+          </div>
+          <div class="input-box">
+            <input
+              v-model="confirmPasswordRegister"
+              type="password"
+              id="confirmPasswordRegister"
+              required
+            />
+            <label for="confirmPasswordRegister">Confirm Password</label>
           </div>
           <div class="check-box">
-            <input type="checkbox" id="register-checkbox" />
+            <input v-model="isAgree" type="checkbox" id="register-checkbox" />
             <label for="register-checkbox"
               >Agree to the terms & conditions</label
             >
           </div>
-          <button class="submit-button">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
+          <button class="submit-button" @click="handleRegister">
             Register
           </button>
 
@@ -137,7 +240,7 @@ onMounted(() => {
               login!
             </span>
           </div>
-        </form>
+        </div>
       </div>
 
       <div class="other-options">

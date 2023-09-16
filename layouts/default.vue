@@ -1,4 +1,19 @@
-<script setup lang="ts"></script>
+<script setup>
+import { useUserStore } from "~/stores/user";
+
+const userStore = useUserStore();
+const route = useRoute();
+const router = useRouter();
+
+onMounted(() => {
+  userStore.initStore();
+  if (route.fullPath.includes("/auth")) {
+    setTimeout(() => {
+      router.push("/");
+    }, 500);
+  }
+});
+</script>
 <template>
   <div>
     <SharedHeader />
