@@ -1,4 +1,36 @@
-<script setup lang="ts"></script>
+<script setup>
+// Categories
+let { data: jobCategories } = await useFetch(
+  `http://127.0.0.1:8000/api/v1/jobs/categories/`
+);
+let selectedCategory = ref("");
+let selectedCategories = [];
+let searchText = ref("");
+
+const toggleCategory = (id) => {
+  const index = selectedCategories.indexOf(id); // check if id is already selected
+  console.log(index, id);
+
+  if (index === -1) {
+    selectedCategories.push(id);
+  } else {
+    selectedCategories.splice(index, 1);
+  }
+
+  selectedCategory.value = selectedCategories.join(",");
+};
+
+let { data: jobs } = await useFetch("http://127.0.0.1:8000/api/v1/jobs/", {
+  query: { searchText: searchText, categories: selectedCategory },
+});
+
+// search functionality
+const handleSearch = () => {
+  const oldSearchText = searchText.value;
+  searchText.value = "";
+  searchText.value = oldSearchText;
+};
+</script>
 <template>
   <div class="browseWrap px-10">
     <h2 class="text-xl font-medium text-center my-10">
@@ -10,42 +42,53 @@
       >
         <div class="searchBar flex rounded-lg">
           <input
+            v-model="searchText"
             type="text"
             id="searchBar"
             placeholder="Find a job"
             class="rounded-l-lg pl-2 outline-none"
           />
-          <button class="p-3 bg-slate-950 rounded-lg">
+          <button class="p-3 bg-slate-950 rounded-lg" @click="handleSearch">
             <BaseIconSearch class="w-6 h-6 text-white" />
           </button>
         </div>
 
         <div class="jobCategory text-white pt-4">
           <h2 class="border-b-2 border-gray-400 mb-2">Categories</h2>
-          <div v-for="(category, index) in 5" :key="index">
-            Category {{ index }}
+          <div v-for="category in jobCategories" :key="category.id">
+            <p
+              @click="toggleCategory(category.id)"
+              class="cursor-pointer py-2"
+              :class="{
+                'bg-slate-600 rounded-lg px-1 my-1': selectedCategory.includes(
+                  category.id
+                ),
+              }"
+            >
+              {{ category.title }}
+            </p>
           </div>
         </div>
       </div>
 
       <div class="jobTable px-5 space-y-3 w-4/5">
         <div
-          v-for="(item, index) in 5"
-          :key="index"
+          v-for="item in jobs"
+          :key="item.id"
           class="bg-gray-300 p-5 rounded-xl flex justify-between items-center"
         >
           <div class="flex flex-col">
-            <div class="text-lg font-semibold">The Job Position</div>
-            <p>The company name</p>
+            <div class="text-lg font-semibold">{{ item.title }}</div>
+            <p>{{ item.company_name }}</p>
           </div>
           <div class="flex flex-col">
-            <div>World wide</div>
-            <p>$90-120k</p>
+            <div>{{ item.position_location }}</div>
+            <p>${{ item.position_salary }}</p>
           </div>
-          <div>Posted Dec. 1, 2022</div>
+          <div>Posted {{ item.created_at_formatted }}</div>
           <div class="text-white">
             <NuxtLink
-              :to="`/browse/${index + 1}`"
+              :to="`/browse/${item.id}`"
               class="p-3 bg-slate-800 rounded-lg"
               >Details</NuxtLink
             >

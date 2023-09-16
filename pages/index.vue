@@ -1,4 +1,8 @@
-<script setup lang="ts"></script>
+<script setup>
+const { data: jobs } = await useFetch(
+  "http://127.0.0.1:8000/api/v1/jobs/newest/"
+);
+</script>
 <template>
   <div class="heroWrap">
     <div
@@ -15,22 +19,22 @@
 
       <div class="jobTable p-5 space-y-3">
         <div
-          v-for="(item, index) in 5"
-          :key="index"
+          v-for="item in jobs"
+          :key="item.id"
           class="bg-gray-300 p-5 rounded-xl flex justify-between items-center"
         >
           <div class="flex flex-col">
-            <div class="text-lg font-semibold">The Job Position</div>
-            <p>The company name</p>
+            <div class="text-lg font-semibold">{{ item.title }}</div>
+            <p>{{ item.company_name }}</p>
           </div>
           <div class="flex flex-col">
-            <div>World wide</div>
-            <p>$90-120k</p>
+            <div>{{ item.position_location }}</div>
+            <p>${{ item.position_salary }}</p>
           </div>
-          <div>Posted Dec. 1, 2022</div>
+          <div>Posted {{ item.created_at_formatted }}</div>
           <div class="text-white">
             <NuxtLink
-              :to="`/browse/${index + 1}`"
+              :to="`/browse/${item.id}`"
               class="p-3 bg-slate-800 rounded-lg"
               >Details</NuxtLink
             >
